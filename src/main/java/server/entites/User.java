@@ -1,10 +1,24 @@
 package server.entites;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "User")
 public class User {
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(name = "username")
     private String username;
+
+    @Column(name = "password")
     private Character password;
+
+    @Column(name = "active")
     private Boolean active;
+
 
     public User() {
     }
