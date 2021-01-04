@@ -13,7 +13,5 @@ public class Main {
             }
         }
 
-        new CloudDriveServer(paramServer.getPort()).run();
-
     }
 }

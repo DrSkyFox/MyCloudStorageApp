@@ -1,14 +1,27 @@
 package server.entites;
 
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Directories")
 public class Directories {
+    @Id
+    @Column(name = "user_id")
     private Integer idUser;
-    private String pathMain;
+    @Column(name = "catalog")
+    private String catalog;
+    @Column(name = "privileges")
     private String privileges;
+    @Column(name = "deleted")
     private Boolean active;
 
     public Directories(Integer idUser, String pathMain, String privilage, Boolean active) {
         this.idUser = idUser;
-        this.pathMain = pathMain;
+        this.catalog = pathMain;
         this.privileges = privilage;
         this.active = active;
     }
@@ -24,12 +37,12 @@ public class Directories {
         this.idUser = idUser;
     }
 
-    public String getPathMain() {
-        return pathMain;
+    public String getCatalog() {
+        return catalog;
     }
 
-    public void setPathMain(String pathMain) {
-        this.pathMain = pathMain;
+    public void setCatalog(String pathMain) {
+        this.catalog = pathMain;
     }
 
     public String getPrivileges() {
