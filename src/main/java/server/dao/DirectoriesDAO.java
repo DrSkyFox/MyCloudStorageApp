@@ -1,12 +1,11 @@
 package server.dao;
 
 import server.entites.Directories;
-import server.interfaces.DAO;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
-public class DirectoriesDAO implements DAO<Directories> {
+public class DirectoriesDAO {
 
 
     private EntityManager entityManager;
@@ -14,33 +13,24 @@ public class DirectoriesDAO implements DAO<Directories> {
     public DirectoriesDAO() {
     }
 
-    @Override
-    public Directories getById(int i) {
-        return null;
+    public DirectoriesDAO(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
-    @Override
-    public Directories getFindByParam(Directories directories) {
-        return null;
+    public List<Directories> getAll(int id) {
+        return entityManager.createQuery(String.format("from Directories as d where d.idUser = %s", id)).getResultList();
     }
+    
 
-    @Override
-    public List<Directories> getAll() {
-        return null;
-    }
-
-    @Override
     public void create(Directories directories) {
-
+        entityManager.persist(directories);
     }
 
-    @Override
     public void remove(Directories directories) {
-
+        entityManager.remove(directories);
     }
 
-    @Override
     public void edit(Directories directories) {
-
+        entityManager.merge(directories);
     }
 }

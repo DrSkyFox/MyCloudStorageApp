@@ -1,18 +1,15 @@
 package org.example;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import server.dao.UserDAO;
 import server.entites.Users;
+import server.interfaces.LoggerHandlerService;
+import server.objects.LoggerHandler;
 import server.services.EntityFactoryPSQL;
 
 import javax.persistence.EntityManager;
-
-import javax.persistence.PersistenceContext;
-
-import java.util.List;
+import java.nio.charset.Charset;
 
 
 public class Test {
@@ -21,22 +18,21 @@ public class Test {
     private static EntityManager entityManager;
 
     public static void main(String[] args) {
-//        if(sessionFactory == null) {
-//            try {
-//                Configuration configuration = new Configuration().configure();
-//                configuration.addAnnotatedClass(Users.class);
-//                StandardServiceRegistryBuilder builder  = new StandardServiceRegistryBuilder().
-//                        applySettings(configuration.getProperties());
-//                sessionFactory = configuration.buildSessionFactory(builder.build());
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//            }
+        UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
+        userDAO.create(new Users("test1", "test1"));
+//        String str= "user user";
+//
+//        ByteBuf byteBuf = Unpooled.buffer();
+//        byteBuf.writeBytes(str.getBytes());
+//        byte[] bytes = str.getBytes();
+//
+//
+//        System.out.println(new String(bytes, Charset.defaultCharset()));
 
+//        LoggerHandlerService loggerHandlerService = new LoggerHandler();
+//        loggerHandlerService.getLoggerServ().info("test");
+////        System.out.println(Files.isDirectory(Path.of("d:\\games")));
 
-//        EntityManager entityManager =  EntityFactoryPSQL.getEntityManager();
-        List<Users> users = entityManager.createQuery("from Users ").getResultList();
-        System.out.println(users);
 
     }
 

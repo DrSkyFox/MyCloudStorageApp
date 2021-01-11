@@ -19,10 +19,10 @@ public class Directories {
     @Column(name = "deleted")
     private Boolean active;
 
-    public Directories(Integer idUser, String pathMain, String privilage, Boolean active) {
+    public Directories(Integer idUser, String pathMain, String privileges, Boolean active) {
         this.idUser = idUser;
         this.catalog = pathMain;
-        this.privileges = privilage;
+        this.privileges = privileges;
         this.active = active;
     }
 

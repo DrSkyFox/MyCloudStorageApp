@@ -3,31 +3,37 @@ package server.entites;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "Users")
+@Table(name = "users")
 public class Users {
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(name = "user")
+    @Column(name = "login", nullable = false)
     private String user;
 
-    @Column(name = "pass")
-    private Character pass;
+    @Column(name = "pass", nullable = false)
+    private String pass;
 
-    @Column(name = "deleted")
+    @Column(name = "deleted", columnDefinition = "true")
     private Boolean deleted;
 
 
     public Users() {
     }
 
-    public Users(Integer id, String username, Character password, Boolean deleted) {
+    public Users(Integer id, String username, String password, Boolean deleted) {
         this.id = id;
         this.user = username;
         this.pass = password;
         this.deleted = deleted;
+    }
+
+    public Users(String user, String pass) {
+        this.user = user;
+        this.pass = pass;
+        deleted = false;
     }
 
     public Integer getId() {
@@ -46,11 +52,11 @@ public class Users {
         this.user = username;
     }
 
-    public Character getPass() {
+    public String getPass() {
         return pass;
     }
 
-    public void setPass(Character password) {
+    public void setPass(String password) {
         this.pass = password;
     }
 
