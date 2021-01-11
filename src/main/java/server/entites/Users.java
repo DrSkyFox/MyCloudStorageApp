@@ -1,6 +1,7 @@
 package server.entites;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -11,7 +12,7 @@ public class Users {
     private Integer id;
 
     @Column(name = "login", nullable = false)
-    private String user;
+    private String login;
 
     @Column(name = "pass", nullable = false)
     private String pass;
@@ -19,19 +20,22 @@ public class Users {
     @Column(name = "deleted", columnDefinition = "true")
     private Boolean deleted;
 
+    @OneToMany
+    private List<Directories> directoriesList;
+
 
     public Users() {
     }
 
     public Users(Integer id, String username, String password, Boolean deleted) {
         this.id = id;
-        this.user = username;
+        this.login = username;
         this.pass = password;
         this.deleted = deleted;
     }
 
     public Users(String user, String pass) {
-        this.user = user;
+        this.login = user;
         this.pass = pass;
         deleted = false;
     }
@@ -44,12 +48,12 @@ public class Users {
         this.id = id;
     }
 
-    public String getUser() {
-        return user;
+    public String getLogin() {
+        return login;
     }
 
-    public void setUser(String username) {
-        this.user = username;
+    public void setLogin(String username) {
+        this.login = username;
     }
 
     public String getPass() {
@@ -72,7 +76,7 @@ public class Users {
     public String toString() {
         return "Users{" +
                 "id=" + id +
-                ", username='" + user + '\'' +
+                ", username='" + login + '\'' +
                 ", password=" + pass +
                 ", deleted=" + deleted +
                 '}';

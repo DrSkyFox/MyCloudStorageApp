@@ -4,6 +4,7 @@ package server.objects;
 import core.MessagePack;
 import core.comminter.MessageInterface;
 import core.exceptions.LoginSmallException;
+import core.exceptions.NullLoginOrPassException;
 import core.exceptions.SomeThingWrongException;
 import core.exceptions.UserAlreadyExistsException;
 import io.netty.channel.ChannelHandlerContext;
@@ -44,6 +45,20 @@ public class AuthService {
         } catch (SomeThingWrongException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
             logAuth.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    public void auth(ClientDataHand clientDataHand) {
+        logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
+        UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
+        AuthData authData = getData(clientDataHand);
+        try {
+            if(userDAO.getFindByParam(authData.login, authData.pass) != null) {
+
+            }
+        } catch (NullLoginOrPassException e) {
+            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());\
+            sendErrorReg(clientDataHand);
         }
     }
 

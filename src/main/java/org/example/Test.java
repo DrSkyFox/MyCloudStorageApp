@@ -1,5 +1,8 @@
 package org.example;
 
+import core.exceptions.LoginSmallException;
+import core.exceptions.SomeThingWrongException;
+import core.exceptions.UserAlreadyExistsException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import server.dao.UserDAO;
@@ -19,7 +22,23 @@ public class Test {
 
     public static void main(String[] args) {
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-        userDAO.create(new Users("test1", "test1"));
+
+        UserDAO userDAO1 = new UserDAO(EntityFactoryPSQL.getEntityManager());
+
+
+//        try {
+//            userDAO1.create(new Users("test", "test"));
+//        } catch (UserAlreadyExistsException e) {
+//            e.printStackTrace();
+//        } catch (LoginSmallException e) {
+//            e.printStackTrace();
+//        } catch (SomeThingWrongException e) {
+//            e.printStackTrace();
+//        }
+            Users user = userDAO.getFindByParam("test", "test");
+        System.out.println(user.toString());
+
+
 //        String str= "user user";
 //
 //        ByteBuf byteBuf = Unpooled.buffer();

@@ -10,6 +10,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import server.interfaces.LoggerHandlerService;
 import server.interfaces.SettingServer;
+import server.objects.ServerCloudHandler;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -90,7 +91,7 @@ public class CloudDriveServer {
                         @Override
                         public void initChannel(SocketChannel ch)
                                 throws Exception {
-                            ch.pipeline().addLast();
+                            ch.pipeline().addLast(new ServerCloudHandler(settingServer));
                         }
                     }).option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
