@@ -17,20 +17,14 @@ public class UserDAO  {
 
 
     private EntityManager entityManager;
-    private LoggerHandlerService lhs;
 
     public UserDAO(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
-    public UserDAO(EntityManager entityManager, LoggerHandlerService loggerHandlerService) {
-        this.entityManager = entityManager;
-        this.lhs = loggerHandlerService;
-    }
 
-    public void setLoggerHandlerService(LoggerHandlerService loggerHandlerService) {
-        this.lhs = loggerHandlerService;
-    }
+
+
 
     public Users getById(int i) {
         return entityManager.find(Users.class, i);
@@ -50,7 +44,7 @@ public class UserDAO  {
 
 
     public void create(Users users) throws UserAlreadyExistsException, LoginSmallException, SomeThingWrongException {
-        lhs.getLoggerAuth().info("Create Account:");
+
         if(users.getUser().length() <= 3) {
             throw new LoginSmallException("Login must value > 3");
         }
@@ -58,12 +52,11 @@ public class UserDAO  {
             entityManager.getTransaction().begin();
             entityManager.persist(users);
             entityManager.getTransaction().commit();
-            lhs.getLoggerAuth().info("Account created successful");
+
         } catch (RollbackException e) {
             throw new UserAlreadyExistsException("User already exists", e);
         } catch (Exception e) {
-            lhs.getLoggerAuth().warning(e.getMessage());
-            lhs.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
+
             throw new SomeThingWrongException("Something was wrong", e);
         }
 

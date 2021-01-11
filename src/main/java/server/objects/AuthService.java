@@ -3,11 +3,16 @@ package server.objects;
 
 import core.MessagePack;
 import core.comminter.MessageInterface;
+import core.exceptions.LoginSmallException;
+import core.exceptions.SomeThingWrongException;
+import core.exceptions.UserAlreadyExistsException;
 import io.netty.channel.ChannelHandlerContext;
 import server.dao.UserDAO;
 import server.entites.Users;
 import server.interfaces.LoggerHandlerService;
 import server.services.EntityFactoryPSQL;
+
+import java.util.Arrays;
 
 public class AuthService {
 
@@ -28,7 +33,18 @@ public class AuthService {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(clientDataHand);
-        userDAO.create(new Users(authData.login, authData.pass));
+        try {
+            logAuth.getLoggerAuth().info("Start Create Account: " + authData.login);
+            userDAO.create(new Users(authData.login, authData.pass));
+            logAuth.getLoggerAuth().info("Account created success");
+        } catch (UserAlreadyExistsException e) {
+            logAuth.getLoggerAuth().warning(e.getMessage());
+        } catch (LoginSmallException e) {
+            logAuth.getLoggerAuth().warning(e.getMessage());
+        } catch (SomeThingWrongException e) {
+            logAuth.getLoggerAuth().warning(e.getMessage());
+            logAuth.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
+        }
     }
 
     private void sendErrorReg(ClientDataHand clientDataHand) {
