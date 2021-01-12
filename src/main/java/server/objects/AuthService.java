@@ -40,11 +40,14 @@ public class AuthService {
             logAuth.getLoggerAuth().info("Account created success");
         } catch (UserAlreadyExistsException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
+            sendErrorReg(clientDataHand);
         } catch (LoginSmallException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
+            sendErrorReg(clientDataHand);
         } catch (SomeThingWrongException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
             logAuth.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
+            sendErrorReg(clientDataHand);
         }
     }
 
@@ -57,7 +60,7 @@ public class AuthService {
 
             }
         } catch (NullLoginOrPassException e) {
-            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());\
+            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());
             sendErrorReg(clientDataHand);
         }
     }
@@ -68,6 +71,7 @@ public class AuthService {
     }
 
     private AuthData getData(ClientDataHand clientDataHand) {
+        logAuth.getLoggerAuth().info("GetData: " + clientDataHand.getByteBuf());
         MessageInterface messageInterface = new MessagePack(clientDataHand.getByteBuf());
         String[] data = new String(messageInterface.getCommandData()).split(" ");
         return new AuthData(data[0], data[1]);

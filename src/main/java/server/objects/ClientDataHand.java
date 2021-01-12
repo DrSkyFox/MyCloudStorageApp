@@ -15,24 +15,10 @@ public class ClientDataHand {
 
 
     public ClientDataHand() {
-    }
-
-    public void handle() {
 
     }
 
-    void authSuccess() throws IOException {
 
-    }
-
-    void downloadFinish() {
-        state = State.WAITING;
-    }
-
-    void setWaitingThreadState(boolean status) {
-        if (status) state = State.WAITING;
-        else state = State.WAITING;
-    }
 
     public ByteBuf getByteBuf() {
         return byteBuf;
