@@ -15,22 +15,22 @@ import server.services.EntityFactoryPSQL;
 
 import java.util.Arrays;
 
-public class AuthService {
+public class AuthHandler {
 
     private ChannelHandlerContext context;
     private LoggerHandlerService logAuth;
     private FileHandler fileHandler;
 
-    public AuthService(ChannelHandlerContext context) {
+    public AuthHandler(ChannelHandlerContext context) {
         this.context = context;
     }
 
-    public AuthService(ChannelHandlerContext context, LoggerHandlerService logAuth) {
+    public AuthHandler(ChannelHandlerContext context, LoggerHandlerService logAuth) {
         this.context = context;
         this.logAuth = logAuth;
     }
 
-    public void reg(ClientDataHand clientDataHand) {
+    public void reg(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(clientDataHand);
@@ -51,7 +51,7 @@ public class AuthService {
         }
     }
 
-    public void auth(ClientDataHand clientDataHand) {
+    public void auth(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(clientDataHand);
@@ -65,12 +65,12 @@ public class AuthService {
         }
     }
 
-    private void sendErrorReg(ClientDataHand clientDataHand) {
+    private void sendErrorReg(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().warning("Error Register " + context.channel().remoteAddress().toString());
 
     }
 
-    private AuthData getData(ClientDataHand clientDataHand) {
+    private AuthData getData(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().info("GetData: " + clientDataHand.getByteBuf());
         MessageInterface messageInterface = new MessagePack(clientDataHand.getByteBuf());
         String[] data = new String(messageInterface.getCommandData()).split(" ");
