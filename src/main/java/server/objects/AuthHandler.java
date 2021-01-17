@@ -15,22 +15,22 @@ import server.services.EntityFactoryPSQL;
 
 import java.util.Arrays;
 
-public class AuthService {
+public class AuthHandler {
 
     private ChannelHandlerContext context;
     private LoggerHandlerService logAuth;
     private FileHandler fileHandler;
 
-    public AuthService(ChannelHandlerContext context) {
+    public AuthHandler(ChannelHandlerContext context) {
         this.context = context;
     }
 
-    public AuthService(ChannelHandlerContext context, LoggerHandlerService logAuth) {
+    public AuthHandler(ChannelHandlerContext context, LoggerHandlerService logAuth) {
         this.context = context;
         this.logAuth = logAuth;
     }
 
-    public void reg(ClientDataHand clientDataHand) {
+    public void reg(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(clientDataHand);
@@ -40,15 +40,18 @@ public class AuthService {
             logAuth.getLoggerAuth().info("Account created success");
         } catch (UserAlreadyExistsException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
+            sendErrorReg(clientDataHand);
         } catch (LoginSmallException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
+            sendErrorReg(clientDataHand);
         } catch (SomeThingWrongException e) {
             logAuth.getLoggerAuth().warning(e.getMessage());
             logAuth.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
+            sendErrorReg(clientDataHand);
         }
     }
 
-    public void auth(ClientDataHand clientDataHand) {
+    public void auth(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(clientDataHand);
@@ -57,17 +60,18 @@ public class AuthService {
 
             }
         } catch (NullLoginOrPassException e) {
-            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());\
+            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());
             sendErrorReg(clientDataHand);
         }
     }
 
-    private void sendErrorReg(ClientDataHand clientDataHand) {
+    private void sendErrorReg(ClientDataHandler clientDataHand) {
         logAuth.getLoggerAuth().warning("Error Register " + context.channel().remoteAddress().toString());
 
     }
 
-    private AuthData getData(ClientDataHand clientDataHand) {
+    private AuthData getData(ClientDataHandler clientDataHand) {
+        logAuth.getLoggerAuth().info("GetData: " + clientDataHand.getByteBuf());
         MessageInterface messageInterface = new MessagePack(clientDataHand.getByteBuf());
         String[] data = new String(messageInterface.getCommandData()).split(" ");
         return new AuthData(data[0], data[1]);
