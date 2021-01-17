@@ -10,11 +10,15 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import server.interfaces.LoggerHandlerService;
 import server.interfaces.SettingServer;
+import server.objects.ClientList;
+import server.objects.LoggerHandler;
 import server.objects.ServerCloudHandler;
+import server.services.EntityFactoryPSQL;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 
 public class CloudDriveServer {
 
@@ -22,10 +26,13 @@ public class CloudDriveServer {
 
     private Integer port = 9090;
     private String nameService = "Cloud Storage";
+    private String rootRepositoryDirectory = "defaultRepo";
 
     private SettingServer settingServer;
+    private ClientList clientList;
 
     public CloudDriveServer() {
+        logHandler = new LoggerHandler();
     }
 
     public CloudDriveServer(Integer port) {
@@ -55,12 +62,23 @@ public class CloudDriveServer {
         this.nameService = nameService;
     }
 
+    private void checkRootRepository() {
+        if(Files.notExists(Path.of(rootRepositoryDirectory))) {
+            try {
+                Files.createDirectories(Path.of(rootRepositoryDirectory));
+            } catch (IOException e) {
+
+            }
+        }
+    }
+
 
 
     public void start() {
         if(settingServer !=null) {
             port = settingServer.getPort();
             nameService  = settingServer.getNameService();
+            rootRepositoryDirectory = settingServer.getRootDirectory();
         }
 
         try {
@@ -71,6 +89,7 @@ public class CloudDriveServer {
                 logHandler.getLoggerServ().info(toString());
             }
 
+            clientList = new ClientList(logHandler);
             run();
 
         } catch (Exception e) {

@@ -1,8 +1,10 @@
 package server.interfaces;
 
 public interface SettingServer {
+
      int getPort() ;
      void setPort(int port) ;
+
      String getNameService();
      void setNameService(String nameService);
 
