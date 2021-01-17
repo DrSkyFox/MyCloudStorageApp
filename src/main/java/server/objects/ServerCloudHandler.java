@@ -16,7 +16,7 @@ public class ServerCloudHandler extends ChannelInboundHandlerAdapter  {
     private int buffMin;
     private LoggerHandlerService logger;
 
-    private ClientDataHandler clienDataHandler;
+    private ClientDataHand clienDataHandler;
 
     public ServerCloudHandler(SettingServer settingServer) {
         this.settingServer = settingServer;

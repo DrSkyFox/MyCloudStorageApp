@@ -1,9 +1,6 @@
 package server.dao;
 
-import core.exceptions.LoginSmallException;
-import core.exceptions.NullLoginOrPassException;
-import core.exceptions.SomeThingWrongException;
-import core.exceptions.UserAlreadyExistsException;
+import core.exceptions.*;
 import server.entites.Users;
 
 import javax.persistence.EntityManager;
@@ -14,6 +11,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class UserDAO  {
 
@@ -31,21 +29,29 @@ public class UserDAO  {
     }
 
 
-    public Users getFindByParam(String login, String pass) throws NullLoginOrPassException {
+    public Users getFindByParam(String login, String pass) throws NullLoginOrPassException, UserNotFoundException {
+
+
         CriteriaQuery<Users> usersCriteriaQuery = criteriaBuilder.createQuery(Users.class);
         Root<Users> root = usersCriteriaQuery.from(Users.class);
         List<Predicate> predicate = new ArrayList<>();
-        if ((login == null) || (pass == null)) {
-            throw new NullLoginOrPassException("Empty login or pass");
+
+
+        try {
+            predicate.add(criteriaBuilder.equal(root.get("login"), Objects.requireNonNull(login)));
+            predicate.add(criteriaBuilder.equal(root.get("pass"), Objects.requireNonNull(pass)));
+        }
+        catch (NullPointerException e) {
+            throw new NullLoginOrPassException("Incorrect login or pass", e.getCause());
         }
 
-        predicate.add(criteriaBuilder.equal(root.get("login"), login));
-
-        predicate.add(criteriaBuilder.equal(root.get("pass"), pass));
-
         usersCriteriaQuery.select(root).where(predicate.toArray(new Predicate[] {}));
-        Users user = entityManager.createQuery(usersCriteriaQuery).getSingleResult();
-        return user;
+
+        try {
+            return Objects.requireNonNull(entityManager.createQuery(usersCriteriaQuery).getSingleResult());
+        } catch (NullPointerException e) {
+            throw new UserNotFoundException("User not found", e.getCause());
+        }
     }
 
 
@@ -55,13 +61,16 @@ public class UserDAO  {
     }
 
     public void create(Users users) throws UserAlreadyExistsException, LoginSmallException, SomeThingWrongException {
+        Users userChecked = checkUserData(users);
 
-        if(users.getLogin().length() <= 3) {
+        if(userChecked.getLogin().length() <= 3) {
             throw new LoginSmallException("Login must value > 3");
         }
+
+
         try {
             entityManager.getTransaction().begin();
-            entityManager.persist(users);
+            entityManager.persist(userChecked);
             entityManager.getTransaction().commit();
 
         } catch (RollbackException e) {
@@ -72,11 +81,20 @@ public class UserDAO  {
 
     }
 
-    public void remove(Users users) {
-        entityManager.remove(users);
+    private Users checkUserData(Users users) throws SomeThingWrongException {
+        try {
+            return Objects.requireNonNull(users);
+        }
+        catch (NullPointerException e) {
+            throw new SomeThingWrongException("Not found data USER", e.getCause());
+        }
     }
 
-    public void edit(Users users) {
-        entityManager.merge(users);
+    public void remove(Users users) throws SomeThingWrongException {
+        entityManager.remove(checkUserData(users));
+    }
+
+    public void edit(Users users) throws SomeThingWrongException {
+        entityManager.merge(checkUserData(users));
     }
 }
