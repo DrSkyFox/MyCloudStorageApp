@@ -1,6 +1,4 @@
-package core.comminter;
-
-import io.netty.buffer.ByteBuf;
+package core.common;
 
 public interface MessageInterface {
     byte getCommand();

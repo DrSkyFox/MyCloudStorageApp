@@ -6,4 +6,6 @@ public interface ClientHandlerService {
     String getLogging();
     void closeChannel();
     ByteBuf getByteBuf();
+    String getName();
+    void handle();
 }

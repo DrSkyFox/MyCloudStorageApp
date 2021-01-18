@@ -1,7 +1,9 @@
 package server.interfaces;
 
+import io.netty.buffer.ByteBuf;
+
 public interface AuthHandlerService {
-    void reg(ClientHandlerService client);
-    void auth(ClientHandlerService client);
-    void sendErrorReg(ClientHandlerService client);
+    void reg(ByteBuf byteBuf);
+    void auth(ByteBuf byteBuf);
+    void sendErrorReg(String message);
 }

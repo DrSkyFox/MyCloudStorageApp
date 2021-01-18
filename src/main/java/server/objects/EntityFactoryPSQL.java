@@ -1,6 +1,4 @@
-package server.services;
-
-import org.hibernate.annotations.common.util.impl.Log;
+package server.objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

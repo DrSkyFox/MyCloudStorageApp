@@ -2,15 +2,16 @@ package server.objects;
 
 
 import core.MessagePack;
-import core.comminter.MessageInterface;
+import core.common.MessageInterface;
 import core.exceptions.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import server.dao.UserDAO;
 import server.entites.Users;
 import server.interfaces.AuthHandlerService;
 import server.interfaces.ClientHandlerService;
 import server.interfaces.LoggerHandlerService;
-import server.services.EntityFactoryPSQL;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -21,21 +22,22 @@ public class AuthHandler implements AuthHandlerService {
     private LoggerHandlerService logAuth;
     private FileHandler fileHandler;
 
+
     public AuthHandler(ChannelHandlerContext context) {
         this.context = context;
     }
 
-    public AuthHandler(ChannelHandlerContext context, LoggerHandlerService logAuth) {
+
+
+    public AuthHandler(ChannelHandlerContext context,  LoggerHandlerService logAuth) {
         this.context = context;
         this.logAuth = logAuth;
     }
 
-
-
-    public void reg(ClientHandlerService client) {
+    public void reg(ByteBuf byteBuf) {
         logWrite("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-        AuthData authData = getData(client);
+        AuthData authData = getData(byteBuf);
         try {
             logWrite("Start Create Account: " + authData.login);
             userDAO.create(new Users(authData.login, authData.pass));
@@ -51,31 +53,36 @@ public class AuthHandler implements AuthHandlerService {
         }
     }
     @Override
-    public void auth(ClientHandlerService client) {
+    public void auth(ByteBuf byteBuf) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-        AuthData authData = getData(client);
+        AuthData authData = getData(byteBuf);
         try {
             if(userDAO.getFindByParam(authData.login, authData.pass) != null) {
 
             }
         } catch (NullLoginOrPassException e) {
+            String msg = String.format("Error Auth: " + e.getMessage());
             logAuth.getLoggerAuth().warning("Error Auth: " + e.getMessage());
-            sendErrorReg(client);
+            sendErrorReg(msg);
         } catch (UserNotFoundException e) {
-            logAuth.getLoggerAuth().warning("User not found: " + String.format("User - %s, pass - %s", authData.login, authData.pass));
-            sendErrorReg(client);
+            String msg = String.format(" User not found:  User - %s, pass - %s", authData.login, authData.pass);
+            logAuth.getLoggerAuth().warning(msg);
+            sendErrorReg(msg);
         }
     }
     @Override
-    public void sendErrorReg(ClientHandlerService client) {
+    public void sendErrorReg(String message) {
         logAuth.getLoggerAuth().warning("Error Register " + context.channel().remoteAddress().toString());
+        ByteBuf byteBuf = Unpooled.buffer();
+        byteBuf.writeBytes(("Error register. " + message).getBytes());
+        context.writeAndFlush(byteBuf);
 
     }
 
-    private AuthData getData(ClientHandlerService client) {
+    private AuthData getData(ByteBuf byteBuf) {
         logAuth.getLoggerAuth().info("getData:");
-        MessageInterface messageInterface = new MessagePack(client.getByteBuf());
+        MessageInterface messageInterface = new MessagePack(byteBuf);
         String[] data = new String(messageInterface.getCommandData()).split(" ");
         logAuth.getLoggerAuth().info(Arrays.toString(data));
         return new AuthData(data[0], data[1]);

@@ -1,26 +1,26 @@
 package server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import server.interfaces.ClientHandlerService;
+import server.interfaces.CloudStorageService;
 import server.interfaces.LoggerHandlerService;
 import server.interfaces.SettingServer;
 import server.objects.ClientList;
 import server.objects.LoggerHandler;
 import server.objects.ServerCloudHandler;
-import server.services.EntityFactoryPSQL;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.logging.Logger;
 
-public class CloudDriveServer {
+public class CloudDriveServer implements CloudStorageService {
 
     private LoggerHandlerService logHandler;
 
@@ -30,6 +30,8 @@ public class CloudDriveServer {
 
     private SettingServer settingServer;
     private ClientList clientList;
+    private ChannelFuture channelFuture;
+    private CloudStorageService storageService;
 
     public CloudDriveServer() {
         logHandler = new LoggerHandler();
@@ -88,8 +90,8 @@ public class CloudDriveServer {
             } else {
                 logHandler.getLoggerServ().info(toString());
             }
-
-            clientList = new ClientList(logHandler);
+            storageService = CloudDriveServer.this;
+            clientList = new ClientList(storageService,logHandler);
             run();
 
         } catch (Exception e) {
@@ -102,6 +104,7 @@ public class CloudDriveServer {
     public void run()  {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -110,12 +113,12 @@ public class CloudDriveServer {
                         @Override
                         public void initChannel(SocketChannel ch)
                                 throws Exception {
-                            ch.pipeline().addLast(new ServerCloudHandler(settingServer));
+                            ch.pipeline().addLast(new ServerCloudHandler(storageService, settingServer, logHandler));
                         }
                     }).option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
-            ChannelFuture f = b.bind(port).sync();
-            f.channel().closeFuture().sync();
+            channelFuture = b.bind(port).sync();
+            channelFuture.channel().closeFuture().sync();
         }
         catch (InterruptedException e) {
             logHandler.getLoggerServ().warning(e.getMessage());
@@ -123,6 +126,8 @@ public class CloudDriveServer {
         finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
+            closeChannel();
+            logHandler.getLoggerServ().info("Server shutdown");
         }
     }
 
@@ -148,7 +153,36 @@ public class CloudDriveServer {
         return settingServer;
     }
 
+    @Override
+    public LoggerHandlerService getLogger() {
+        return logHandler;
+    }
 
+    @Override
+    public ClientHandlerService addClient(ChannelHandlerContext context, ByteBuf byteBuf) {
+        return clientList.addClient(context, byteBuf);
+    }
+
+    @Override
+    public void deleteClient(ChannelHandlerContext context, ClientHandlerService clientHandlerService) {
+        clientList.deleteClient(context, clientHandlerService);
+    }
+
+    @Override
+    public HashSet<ClientHandlerService> getClients() {
+        return clientList.getListClients();
+    }
+
+    @Override
+    public boolean isOnline(ClientHandlerService clientHandlerService) {
+        return clientList.isOnline(clientHandlerService);
+    }
+
+    @Override
+    public void closeChannel() {
+        clientList.closeAllClients();
+        channelFuture.channel().close();
+    }
 
     @Override
     public String toString() {
