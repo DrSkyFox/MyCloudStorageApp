@@ -1,6 +1,6 @@
 package core;
 
-import core.comminter.MessageInterface;
+import core.common.MessageInterface;
 import io.netty.buffer.ByteBuf;
 
 public class MessagePack implements MessageInterface {

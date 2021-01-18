@@ -1,4 +1,4 @@
-package server.services;
+package server.objects;
 
 import server.interfaces.FileInterface;
 

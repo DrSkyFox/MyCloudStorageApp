@@ -3,6 +3,7 @@ package server.objects;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import server.interfaces.ClientHandlerService;
+import server.interfaces.CloudStorageService;
 import server.interfaces.LoggerHandlerService;
 
 import java.util.Arrays;
@@ -12,12 +13,18 @@ import java.util.Objects;
 public class ClientList {
     private HashSet<ClientHandlerService> clients = new HashSet<>();
     private LoggerHandlerService logService;
+    private CloudStorageService storageService;
 
-    public ClientList(LoggerHandlerService logService) {
+    public ClientList(CloudStorageService storageService,LoggerHandlerService logService) {
         this.logService = logService;
+        this.storageService = storageService;
     }
 
     public ClientList() {
+    }
+
+    public ClientList(CloudStorageService storageService) {
+        this.storageService = storageService;
     }
 
     public ClientHandlerService addClient(ChannelHandlerContext context, ByteBuf byteBuf) {

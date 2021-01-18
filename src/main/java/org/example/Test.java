@@ -1,18 +1,10 @@
 package org.example;
 
-import core.exceptions.LoginSmallException;
-import core.exceptions.SomeThingWrongException;
-import core.exceptions.UserAlreadyExistsException;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import server.dao.UserDAO;
 import server.entites.Users;
-import server.interfaces.LoggerHandlerService;
-import server.objects.LoggerHandler;
-import server.services.EntityFactoryPSQL;
+import server.objects.EntityFactoryPSQL;
 
 import javax.persistence.EntityManager;
-import java.nio.charset.Charset;
 
 
 public class Test {

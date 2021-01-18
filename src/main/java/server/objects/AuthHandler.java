@@ -2,78 +2,89 @@ package server.objects;
 
 
 import core.MessagePack;
-import core.comminter.MessageInterface;
-import core.exceptions.LoginSmallException;
-import core.exceptions.NullLoginOrPassException;
-import core.exceptions.SomeThingWrongException;
-import core.exceptions.UserAlreadyExistsException;
+import core.common.MessageInterface;
+import core.exceptions.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import server.dao.UserDAO;
 import server.entites.Users;
+import server.interfaces.AuthHandlerService;
+import server.interfaces.ClientHandlerService;
 import server.interfaces.LoggerHandlerService;
-import server.services.EntityFactoryPSQL;
 
 import java.util.Arrays;
+import java.util.Objects;
 
-public class AuthHandler {
+public class AuthHandler implements AuthHandlerService {
 
     private ChannelHandlerContext context;
     private LoggerHandlerService logAuth;
     private FileHandler fileHandler;
 
+
     public AuthHandler(ChannelHandlerContext context) {
         this.context = context;
     }
 
-    public AuthHandler(ChannelHandlerContext context, LoggerHandlerService logAuth) {
+
+
+    public AuthHandler(ChannelHandlerContext context,  LoggerHandlerService logAuth) {
         this.context = context;
         this.logAuth = logAuth;
     }
 
-    public void reg(ClientDataHandler clientDataHand) {
-        logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
+    public void reg(ByteBuf byteBuf) {
+        logWrite("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-        AuthData authData = getData(clientDataHand);
+        AuthData authData = getData(byteBuf);
         try {
-            logAuth.getLoggerAuth().info("Start Create Account: " + authData.login);
+            logWrite("Start Create Account: " + authData.login);
             userDAO.create(new Users(authData.login, authData.pass));
-            logAuth.getLoggerAuth().info("Account created success");
+            logWrite("Account created success");
+
         } catch (UserAlreadyExistsException e) {
-            logAuth.getLoggerAuth().warning(e.getMessage());
-            sendErrorReg(clientDataHand);
+            logWrite(e.getMessage(), true);
         } catch (LoginSmallException e) {
-            logAuth.getLoggerAuth().warning(e.getMessage());
-            sendErrorReg(clientDataHand);
+            logWrite(e.getMessage(), true);
         } catch (SomeThingWrongException e) {
-            logAuth.getLoggerAuth().warning(e.getMessage());
-            logAuth.getLoggerAuth().warning(Arrays.toString(e.getStackTrace()));
-            sendErrorReg(clientDataHand);
+            logWrite(e.getMessage(),true);
+            logWrite(Arrays.toString(e.getStackTrace()),true);
         }
     }
-
-    public void auth(ClientDataHandler clientDataHand) {
+    @Override
+    public void auth(ByteBuf byteBuf) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-        AuthData authData = getData(clientDataHand);
+        AuthData authData = getData(byteBuf);
         try {
             if(userDAO.getFindByParam(authData.login, authData.pass) != null) {
 
             }
         } catch (NullLoginOrPassException e) {
-            logAuth.getLoggerAuth().info("Error Auth: " + e.getMessage());
-            sendErrorReg(clientDataHand);
+            String msg = String.format("Error Auth: " + e.getMessage());
+            logAuth.getLoggerAuth().warning("Error Auth: " + e.getMessage());
+            sendErrorReg(msg);
+        } catch (UserNotFoundException e) {
+            String msg = String.format(" User not found:  User - %s, pass - %s", authData.login, authData.pass);
+            logAuth.getLoggerAuth().warning(msg);
+            sendErrorReg(msg);
         }
     }
-
-    private void sendErrorReg(ClientDataHandler clientDataHand) {
+    @Override
+    public void sendErrorReg(String message) {
         logAuth.getLoggerAuth().warning("Error Register " + context.channel().remoteAddress().toString());
+        ByteBuf byteBuf = Unpooled.buffer();
+        byteBuf.writeBytes(("Error register. " + message).getBytes());
+        context.writeAndFlush(byteBuf);
 
     }
 
-    private AuthData getData(ClientDataHandler clientDataHand) {
-        logAuth.getLoggerAuth().info("GetData: " + clientDataHand.getByteBuf());
-        MessageInterface messageInterface = new MessagePack(clientDataHand.getByteBuf());
+    private AuthData getData(ByteBuf byteBuf) {
+        logAuth.getLoggerAuth().info("getData:");
+        MessageInterface messageInterface = new MessagePack(byteBuf);
         String[] data = new String(messageInterface.getCommandData()).split(" ");
+        logAuth.getLoggerAuth().info(Arrays.toString(data));
         return new AuthData(data[0], data[1]);
     }
 
@@ -87,6 +98,16 @@ public class AuthHandler {
         }
     }
 
+    private void logWrite(String message) {
+        logWrite(message, false);
+    }
+
+    private void logWrite(String message, boolean warning) {
+        if(warning) {
+            Objects.requireNonNull(logAuth).getLoggerAuth().warning(message);
+        } else Objects.requireNonNull(logAuth).getLoggerAuth().info(message);
+
+    }
 
 
 

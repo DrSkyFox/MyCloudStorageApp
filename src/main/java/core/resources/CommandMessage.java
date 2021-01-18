@@ -1,4 +1,4 @@
-package core;
+package core.resources;
 
 import core.exceptions.ArgumentException;
 
@@ -18,7 +18,9 @@ public enum CommandMessage {
     RENAMEREMOTEFILE("renamerem", "Rename local file. Format: renamerem file_name new_filename", 2, (byte) 9, (byte) -1),
     REMOVEFILELOC("removeloc", "Remove local file. Format: removeloc file_name", 1, (byte) 11, (byte) -1),
     REMOVEFILEREM("removeloc", "Remove remote file. Format: removeloc file_name", 1, (byte) 12, (byte) -1),
-    EXIT("exit", "exit from server", 0, (byte) 13, (byte) -1);
+    EXIT("exit", "exit from server", 0, (byte) 13, (byte) -1),
+    PACKAGE(null, "PACKAGE", 0 , (byte) 14, (byte) -1),
+    COMMANDWAITING(null, "Command waiting", 0,(byte) 15, (byte) -1);
 
 
     private final String name;
@@ -54,7 +56,7 @@ public enum CommandMessage {
         return true;
     }
 
-    public CommandMessage getCommandMessageSignalByte(byte signalByte) throws Exception {
+    public static CommandMessage getCommandMessageSignalByte(byte signalByte) throws Exception {
         return Arrays.stream(CommandMessage.values())
                 .filter(commandMessage -> commandMessage.signalByte == signalByte)
                 .findFirst().orElseThrow(() ->
