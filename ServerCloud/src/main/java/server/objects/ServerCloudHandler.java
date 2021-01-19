@@ -15,12 +15,21 @@ public class ServerCloudHandler extends ChannelInboundHandlerAdapter  {
 
     private SettingServer settingServer;
     private ByteBuf byteBuf;
-    private int buffMax;
-    private int buffMin;
     private LoggerHandlerService logger;
     private CloudStorageService storageService;
 
     private ClientHandlerService clientHandlerService;
+
+    /*
+    В ближающее время
+    Переделать под модульную схему...
+    Модульноость: каждый handler будет иметь свой набор комманд и общий интрефейс.
+    Отслеживания состояния подключения в зависмости от выпоняемоего handler.
+    Нужен класс для подключения хэндов и списков состояния.
+    Результат повышение гибгости работы приложения.
+    ...
+    Добавить TOR
+     */
 
     public ServerCloudHandler(CloudStorageService storageService, SettingServer settingServer, LoggerHandlerService logger) {
         this.settingServer = settingServer;
@@ -52,6 +61,9 @@ public class ServerCloudHandler extends ChannelInboundHandlerAdapter  {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         byteBuf.writeBytes((ByteBuf) msg);
+        clientHandlerService.handle();
+        byteBuf.release();
+
     }
 
     @Override

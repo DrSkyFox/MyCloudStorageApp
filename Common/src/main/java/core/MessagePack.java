@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 
 public class MessagePack implements MessageInterface {
     private byte command;
-    private byte[] messages;
+    private byte[] data;
 
     public MessagePack(ByteBuf byteBuf) {
         load(byteBuf);
@@ -14,8 +14,8 @@ public class MessagePack implements MessageInterface {
 
     private void load(ByteBuf byteBuf) {
         command = byteBuf.readByte();
-        messages = new byte[DefaultSettings.LEN_COMM];
-        byteBuf.readBytes(messages);
+        data = new byte[DefaultSettings.LEN_COMM];
+        byteBuf.readBytes(data);
     }
 
     @Override
@@ -25,6 +25,6 @@ public class MessagePack implements MessageInterface {
 
     @Override
     public byte[] getCommandData() {
-        return messages;
+        return data;
     }
 }

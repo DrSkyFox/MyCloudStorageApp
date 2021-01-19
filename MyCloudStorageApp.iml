@@ -7,7 +7,7 @@
           <unit-entry name="hibernate.cfg.xml" />
         </datasource-map>
         <naming-strategy-map />
-        <deploymentDescriptor name="hibernate.cfg.xml" url="file://$MODULE_DIR$/src/main/resources/hibernate.cfg.xml" />
+        <deploymentDescriptor name="hibernate.cfg.xml" url="file://$MODULE_DIR$/ServerCloud/src/main/resources/hibernate.cfg.xml" />
       </configuration>
     </facet>
     <facet type="jpa" name="JPA">
@@ -18,7 +18,7 @@
           <factory-entry name="ds" value="e23a3f7f-cff2-4bb0-828f-19c14514fb07" />
         </datasource-mapping>
         <naming-strategy-map />
-        <deploymentDescriptor name="persistence.xml" url="file://$MODULE_DIR$/src/main/resources/META-INF/persistence.xml" />
+        <deploymentDescriptor name="persistence.xml" url="file://$MODULE_DIR$/ServerCloud/src/main/resources/META-INF/persistence.xml" />
       </configuration>
     </facet>
   </component>
