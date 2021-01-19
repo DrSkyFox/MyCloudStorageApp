@@ -1,6 +1,7 @@
 package core.resources;
 
 import core.exceptions.ArgumentException;
+import core.exceptions.IncorrectCommandException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,11 +57,11 @@ public enum CommandMessage {
         return true;
     }
 
-    public static CommandMessage getCommandMessageSignalByte(byte signalByte) throws Exception {
+    public static CommandMessage getCommandMessageSignalByte(byte signalByte) throws IncorrectCommandException {
         return Arrays.stream(CommandMessage.values())
                 .filter(commandMessage -> commandMessage.signalByte == signalByte)
                 .findFirst().orElseThrow(() ->
-            new Exception(String.format("Error in findCommand. Args %s",signalByte))
+            new IncorrectCommandException(String.format("Error in findCommand. Args %s", signalByte))
         );
     }
 

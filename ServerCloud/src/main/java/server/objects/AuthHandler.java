@@ -52,15 +52,16 @@ public class AuthHandler implements AuthHandlerService {
             logWrite(Arrays.toString(e.getStackTrace()),true);
         }
     }
+
+
+
     @Override
-    public void auth(ByteBuf byteBuf) {
+    public Users auth(ByteBuf byteBuf) {
         logAuth.getLoggerAuth().info("Authorizations start: " + context.channel().remoteAddress().toString());
         UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
         AuthData authData = getData(byteBuf);
         try {
-            if(userDAO.getFindByParam(authData.login, authData.pass) != null) {
-
-            }
+            return userDAO.getFindByParam(authData.login, authData.pass);
         } catch (NullLoginOrPassException e) {
             String msg = String.format("Error Auth: " + e.getMessage());
             logAuth.getLoggerAuth().warning("Error Auth: " + e.getMessage());
@@ -70,7 +71,13 @@ public class AuthHandler implements AuthHandlerService {
             logAuth.getLoggerAuth().warning(msg);
             sendErrorReg(msg);
         }
+        return null;
     }
+
+
+
+
+
     @Override
     public void sendErrorReg(String message) {
         logAuth.getLoggerAuth().warning("Error Register " + context.channel().remoteAddress().toString());

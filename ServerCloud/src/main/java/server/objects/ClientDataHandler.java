@@ -1,6 +1,8 @@
 package server.objects;
 
+
 import core.MessagePack;
+import core.exceptions.IncorrectCommandException;
 import core.resources.CommandMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,6 +28,8 @@ public class ClientDataHandler implements ClientHandlerService {
 
     private boolean successLogIn;
 
+    private Integer userID;
+
     private String name;
 
 
@@ -50,71 +54,86 @@ public class ClientDataHandler implements ClientHandlerService {
 
     @Override
     public void handle() {
-        if(state.equals(State.IDLE)) return;
-        try {
-            while (byteBuf.readableBytes() > 0) {
+        if(Objects.equals(state,State.WAITING)) return;
 
+        while (byteBuf.readableBytes()>0) {
+            try {
+                stateCheck();
+            } catch (IncorrectCommandException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
+        }
 
+
+
+    }
+
+    private void stateCheck() throws IncorrectCommandException {
+        if (state == State.IDLE) checkLogIn();
+    }
+
+    private void checkLogIn() throws IncorrectCommandException {
+        if(successLogIn) {
+            selectCommand();
+        } else  {
+            auth();
+        }
+
+    }
+
+    private void selectCommand() throws IncorrectCommandException {
+        logger.info(String.format("User %s select command: ", channelHandlerContext.channel().remoteAddress()));
+        CommandMessage commandMessage = CommandMessage.getCommandMessageSignalByte(byteBuf.readByte());
+        state = State.COMMAND_WAIT;
+        switch (commandMessage) {
+            case UPLOADFILE:
+
+                break;
+            case DOWNLOADFILE:
+
+                break;
+            case REMOVEFILEREM:
+
+                break;
+            case RENAMEREMOTEFILE:
+
+                break;
+
+            case LISTREMOTE:
+
+                break;
+            case PACKAGE:
+                break;
         }
     }
 
-    private void stateExecute() {
-        if(state.equals(State.IDLE)) {
 
-        }
+
+    private void auth() throws IncorrectCommandException {
+        logger.info("auth(): getCommandMessageSignalByte");
+        CommandMessage commandMessage = CommandMessage.getCommandMessageSignalByte(byteBuf.readByte());
+        if(Objects.equals(CommandMessage.AUTUSER, commandMessage)) {
+            logger.info("State Auth");
+            state = State.AUTH;
+            successLogIn = getAuthorization();
+            state = State.IDLE;
+        } else if (Objects.equals(CommandMessage.REGUSER, commandMessage)) {
+            state = State.REG;
+            logger.info("State Reg");
+            regUser();
+            state = State.IDLE;
+        } else state = State.IDLE;
     }
+
 
     void downloadFinish() {
         state = State.WAITING;
     }
 
 
-    private void getPackage() {
-        byte b;
-        while (byteBuf.readableBytes() > 0) {
-            b = byteBuf.readByte();
-            try {
-                if(successLogIn && Objects.equals(CommandMessage.getCommandMessageSignalByte(b), CommandMessage.PACKAGE)) {
-                    state = State.DOWNLOAD;
-                    break;
-                } else if (Objects.equals(CommandMessage.getCommandMessageSignalByte(b),CommandMessage.COMMANDWAITING)) {
-                    state = State.COMMAND_WAIT;
-                    break;
-                }
-            } catch (Exception e) {
-                logger.info(String.format("Exception in getPackage: %s, byte data: %s", e.getMessage(), b));
-            }
-        }
-    }
-
-    private void selectCommand() {
-        Objects.requireNonNull(byteBuf);
-        if(checkCommand(byteBuf,CommandMessage.AUTUSER)) {
-            successLogIn = getAuthorization();
-        } else if(checkCommand(byteBuf, CommandMessage.REGUSER )) {
-            regUser();
-        } else if(successLogIn) {
-            selectLoggedCommand();
-        } else state = State.IDLE;
-    }
-
-    private void selectLoggedCommand() {
-
-    }
-
-    private boolean checkCommand(ByteBuf byteBuf, CommandMessage commandMessage) {
-        try {
-            return Objects.equals(CommandMessage.getCommandMessageSignalByte(byteBuf.getByte(0)),commandMessage);
-        } catch (Exception e) {
-            logger.warning(e.getMessage());
-        }
-        return false;
-    }
 
     private boolean getAuthorization() {
-        authorization.auth(byteBuf);
+        userID = authorization.auth(byteBuf).getId();
         return true;
     }
 
