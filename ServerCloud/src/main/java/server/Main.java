@@ -30,6 +30,7 @@ public class Main {
         SettingServer settingServer = new ParamServer();
 
         while (paramStart.hasNext()) {
+
             if (paramStart.equals("-port")) {
                 settingServer.setPort(Integer.valueOf(paramStart.next()));
             }
@@ -48,6 +49,7 @@ public class Main {
             if(paramStart.equals("-logAuthFile")) {
                 settingServer.setLogAuthFile(paramStart.next());
             }
+
         }
         return settingServer;
     }
