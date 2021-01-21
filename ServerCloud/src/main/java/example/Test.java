@@ -13,23 +13,23 @@ public class Test {
     private static EntityManager entityManager;
 
     public static void main(String[] args) {
-        UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
-
-        UserDAO userDAO1 = new UserDAO(EntityFactoryPSQL.getEntityManager());
-
-
-//        try {
-//            userDAO1.create(new Users("test", "test"));
-//        } catch (UserAlreadyExistsException e) {
-//            e.printStackTrace();
-//        } catch (LoginSmallException e) {
-//            e.printStackTrace();
-//        } catch (SomeThingWrongException e) {
-//            e.printStackTrace();
-//        }
-            Users user = userDAO.getFindByParam("test", "test");
-        System.out.println(user.toString());
-
+//        UserDAO userDAO = new UserDAO(EntityFactoryPSQL.getEntityManager());
+//
+//        UserDAO userDAO1 = new UserDAO(EntityFactoryPSQL.getEntityManager());
+//
+//
+////        try {
+////            userDAO1.create(new Users("test", "test"));
+////        } catch (UserAlreadyExistsException e) {
+////            e.printStackTrace();
+////        } catch (LoginSmallException e) {
+////            e.printStackTrace();
+////        } catch (SomeThingWrongException e) {
+////            e.printStackTrace();
+////        }
+//            Users user = userDAO.getFindByParam("test", "test");
+//        System.out.println(user.toString());
+//
 
 //        String str= "user user";
 //

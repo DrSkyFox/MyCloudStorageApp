@@ -74,7 +74,10 @@ public class CloudDriveServer implements CloudStorageService {
         }
     }
 
-
+    @Override
+    public SettingServer getSettings() {
+        return settingServer;
+    }
 
     public void start() {
         if(settingServer !=null) {

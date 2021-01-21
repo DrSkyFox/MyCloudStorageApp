@@ -11,5 +11,8 @@
         <module name="Common" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="MyCloudStorageApp" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>

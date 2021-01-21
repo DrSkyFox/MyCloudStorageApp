@@ -13,5 +13,7 @@ public interface CloudStorageService {
     boolean isOnline(ClientHandlerService  clientHandlerService);
     void closeChannel();
     LoggerHandlerService getLogger();
+    SettingServer getSettings();
+
 
 }

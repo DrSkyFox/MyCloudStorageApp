@@ -7,12 +7,14 @@ import core.exceptions.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import server.dao.DirectoriesDAO;
 import server.dao.UserDAO;
 import server.entites.Users;
 import server.interfaces.AuthHandlerService;
 import server.interfaces.ClientHandlerService;
 import server.interfaces.LoggerHandlerService;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -116,7 +118,8 @@ public class AuthHandler implements AuthHandlerService {
 
     }
 
-
-
-
+    @Override
+    public Path getUserDirectory(int id) {
+        return Path.of(new DirectoriesDAO(EntityFactoryPSQL.getEntityManager()).getById(id).getCatalog());
+    }
 }
