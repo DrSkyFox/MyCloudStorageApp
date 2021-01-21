@@ -51,14 +51,14 @@ public class FileHandler implements FileHandlerService {
 
     }
 
-    private void sendList(List<Path> paths) {
+    private void sendList(List<Path> paths) throws IOException {
         ByteBuf byteBuf = bufAllocator.directBuffer();
         byteBuf.writeByte(CommandMessage.LISTREMOTE.getSignalByte());
 
         for (Path path: paths
              ) {
             byteBuf.writeBytes(path.getFileName().toString().getBytes(StandardCharsets.UTF_8));
-//            byteBuf.writeByte();
+            byteBuf.writeLong(Files.size(path));
         }
 
     }
