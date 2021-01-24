@@ -10,42 +10,29 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class LoggerHandler implements LoggerHandlerService {
+
     private static Logger serverLog = Logger.getLogger("CloudServer");
     private static Logger authLog = Logger.getLogger("Auth");
-    private FileHandler fileHandlerServer;
-    private FileHandler fileHandlerAuth;
+    private static Logger fileTransferLog = Logger.getLogger("FileTransfer");
 
 
 
+    public LoggerHandler(SettingServer settingServer) {
 
-    public LoggerHandler(SettingServer settingServer, boolean useFileHandler) {
 
-        try {
-            fileHandlerServer = new FileHandler(Objects.requireNonNull(settingServer.getLoggerFile()), true);
-        } catch (NullPointerException e) {
-            e.getMessage();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            fileHandlerAuth = new FileHandler(Objects.requireNonNull(settingServer.getLogAuthFile()), true);
-        } catch (NullPointerException e) {
-            e.getMessage();
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        serverLog.addHandler(fileHandlerServer);
-        SimpleFormatter formatter = new SimpleFormatter();
-        fileHandlerServer.setFormatter(formatter);
+        serverLog.addHandler(settingServer.getLoggerConsoleHandlerForServerInformation());
+        serverLog.addHandler(settingServer.getLoggerFileHandlerForServerInformation());
         serverLog.info("Starting Log");
+
+        authLog.addHandler(settingServer.getLoggerConsoleHandlerForAuthorizationInformation());
+        authLog.addHandler(settingServer.getLoggerFileHandlerForAuthorizationInformation());
+        authLog.info("Starting Log");
+
+        fileTransferLog.addHandler(settingServer.getLoggerConsoleHandlerForFileTransferInformation());
+        fileTransferLog.addHandler(settingServer.getLoggerFileHandlerForFileTransferInformation());
     }
 
     public LoggerHandler() {
-    }
-
-    public LoggerHandler(SettingServer settingServer) {
-        this(settingServer, true);
     }
 
 
@@ -61,5 +48,10 @@ public class LoggerHandler implements LoggerHandlerService {
     @Override
     public Logger getLoggerServ() {
         return serverLog;
+    }
+
+    @Override
+    public Logger getLoggerFile() {
+        return fileTransferLog;
     }
 }

@@ -1,66 +1,68 @@
 package server.objects;
 
 import core.MessagePack;
-import core.resources.CommandMessage;
+import core.resources.CommandFileControl;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
-import server.dao.UserDAO;
-import server.interfaces.ClientHandlerService;
-import server.interfaces.CloudStorageService;
-import server.interfaces.FileHandlerService;
-import server.interfaces.LoggerHandlerService;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import server.interfaces.ServerInterface;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class FileHandler implements FileHandlerService {
-    private ChannelHandlerContext  context;
-    private ClientHandlerService  clientHandlerService;
+public class FileHandler extends ChannelInboundHandlerAdapter  {
+
     private Path rooPath;
     private Logger logger;
     private PooledByteBufAllocator bufAllocator;
-    private CloudStorageService storageService;
+    private ServerInterface serverInterface;
+    private ChannelHandlerContext context;
 
 
-    public FileHandler(ChannelHandlerContext context, ClientHandlerService clientHandlerService, CloudStorageService storageService) {
-        this.context = context;
-        this.clientHandlerService = clientHandlerService;
-        this.logger = storageService.getLogger().getLoggerServ();
-        this.bufAllocator = PooledByteBufAllocator.DEFAULT;
-        this.storageService =  storageService;
-    }
 
 
     @Override
-    public void listOfFiles() {
-        logger.info("send list of files in  directory" + rooPath.getFileName());
-        try {
-            List<Path> fileList= Files.list(rooPath).sorted(Comparator.naturalOrder()).collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        serverInterface.getLogger().getLoggerServ().info("FileHandler Added to user " + context.channel().remoteAddress().toString());
+        ctx.writeAndFlush(new MessagePack<CommandFileControl>(CommandFileControl.MESSAGE, "Authorization success. FileControl success initialized"));
+        super.handlerAdded(ctx);
+        context = ctx;
+    }
 
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        MessagePack<CommandFileControl> messagePack = (MessagePack<CommandFileControl>) msg;
+        CommandFileControl fileControl = CommandFileControl.findCommand(messagePack.getCommandByte());
 
     }
 
-    private void sendList(List<Path> paths) throws IOException {
-        ByteBuf byteBuf = bufAllocator.directBuffer();
-        byteBuf.writeByte(CommandMessage.LISTREMOTE.getSignalByte());
+    public FileHandler(ServerInterface serverInterface, Path path) {
+        this.serverInterface = serverInterface;
+        this.rooPath = path;
+        this.logger = serverInterface.getLogger().getLoggerFile();
+        bufAllocator = PooledByteBufAllocator.DEFAULT;
+        setUserDirectory();
+    }
 
-        for (Path path: paths
-             ) {
-            byteBuf.writeBytes(path.getFileName().toString().getBytes(StandardCharsets.UTF_8));
-            byteBuf.writeLong(Files.size(path));
+
+
+    public void listOfFiles() {
+        logger.info("send list of files in  directory" + rooPath.getFileName());
+        try {
+            List<Path> fileList = Files.list(rooPath).sorted(Comparator.naturalOrder()).collect(Collectors.toList());
+            context.writeAndFlush(new MessagePack<CommandFileControl>(CommandFileControl.LISTREMOTE, fileList));
+        } catch (IOException e) {
+            logger.warning(String.format("%s get error on list command: %s",
+                    context.channel().remoteAddress().toString(),
+                    e.getMessage()));
         }
-
     }
 
 
@@ -75,9 +77,5 @@ public class FileHandler implements FileHandlerService {
         }
     }
 
-    @Override
-    public void setRootDirectory(Path path) {
-        rooPath = path;
-        setUserDirectory();
-    }
+
 }
