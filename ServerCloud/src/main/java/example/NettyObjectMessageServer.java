@@ -42,7 +42,7 @@ public class NettyObjectMessageServer {
                             pipeline.addLast("ClientHandler", new ChannelInboundHandlerAdapter() {
 
                                 private final File file = new File("test.7z");
-                                private final FileOutputStream fos = new FileOutputStream(file, true);
+
 
 
                                 @Override
