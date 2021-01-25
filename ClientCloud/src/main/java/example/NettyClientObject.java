@@ -1,8 +1,6 @@
 package example;
 
-import core.MessagePack;
-import core.resources.CommandAuthorization;
-import core.resources.FileInformation;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -31,12 +29,13 @@ public class NettyClientObject {
                             @Override
                             public void initChannel(SocketChannel socketChannel) {
                                 ChannelPipeline pipeline = socketChannel.pipeline();
-                                pipeline.addLast(new ObjectEncoder());
-                                pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+//                                pipeline.addLast(new ObjectEncoder());
+//                                pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+                                pipeline.addLast("FileWrite",new ChunkedWriteHandler());
                                 pipeline.addLast("ClientHandler",new ChannelInboundHandlerAdapter() {
 
 
-                                    private final File file = new File("LogFile.log");
+                                    private final File file = new File("FARCARDS_GK.7z");
 
                                     @Override
                                     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -50,7 +49,7 @@ public class NettyClientObject {
                                         System.out.println((String)msg);
                                     }
                                 });
-                                pipeline.addLast("FileWrite",new ChunkedWriteHandler());
+
                             }
                         })
                         .connect("localhost", 1234)
