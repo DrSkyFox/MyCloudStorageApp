@@ -29,7 +29,7 @@ public class ChannelClientHandler extends ChannelInboundHandlerAdapter  {
         serverInterface.getChannelGroup().add(ctx.channel());
         clientInfo  = ctx.channel().remoteAddress().toString();
         id = ctx.channel().id();
-        logger.info(String.format("Client connect: %s ", ctx.channel().remoteAddress().toString());
+        logger.info(String.format("Client connect: %s ", ctx.channel().remoteAddress().toString()));
 
     }
 

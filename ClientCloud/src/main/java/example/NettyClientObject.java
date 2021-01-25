@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class NettyClientObject {
 
@@ -40,7 +41,7 @@ public class NettyClientObject {
                                         System.out.println(information.toString());
                                     }
                                 });
-
+                                pipeline.addLast(new ChunkedWriteHandler());
                             }
                         })
                         .connect("localhost", 1234)

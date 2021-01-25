@@ -139,7 +139,7 @@ public class AuthHandler extends ChannelInboundHandlerAdapter  {
     private AuthData getData(MessageInterface messagePack) {
         String[] strings =((String) messagePack.getDataObject()).split(" ");
         logInfo("getData:" + Arrays.toString(strings));
-        if(strings.length <= 1) {
+        if(strings.length == 2) {
             return new AuthData(strings[0], strings[1]);
         } else return null;
     }
