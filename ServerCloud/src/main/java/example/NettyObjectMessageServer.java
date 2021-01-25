@@ -5,6 +5,7 @@ import core.resources.CommandAuthorization;
 import core.resources.CommandFileControl;
 import core.resources.FileInformation;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -13,13 +14,15 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.stream.ChunkedStream;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
+import java.io.*;
 import java.util.Arrays;
 
 
 /**
  * Hello world!
- *
  */
 public class NettyObjectMessageServer {
     public static void main(String[] args) throws Exception {
@@ -30,61 +33,44 @@ public class NettyObjectMessageServer {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        public void initChannel(SocketChannel socketChannel) {
+                        public void initChannel(SocketChannel socketChannel) throws FileNotFoundException {
                             ChannelPipeline pipeline = socketChannel.pipeline();
                             pipeline.addLast(new ObjectEncoder());
                             pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-                            pipeline.addLast(new ChannelInboundHandlerAdapter() {
+                            pipeline.addLast("ClientHandler", new ChannelInboundHandlerAdapter() {
+
+                                private final File file = new File("test.txt");
+                                private final FileOutputStream outputStream = new FileOutputStream(file, true);
+
                                 @Override
-                                public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                    MessagePack<CommandFileControl> command = (MessagePack<CommandFileControl>) msg;
-                                    System.out.println("Command byte " + command.getCommandByte());
-                                    String [] strings = ((String) command.getDataObject()).split("");
-                                    System.out.println("Command login and pass" + Arrays.toString(strings));
+                                public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                    super.channelActive(ctx);
                                 }
 
                                 @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    cause.printStackTrace();
-                                    ctx.channel().close();
-                                }
-                            });
+                                public void channelRead(ChannelHandlerContext ctx, Object msg)  {
+                                    ByteBuf byteBuf = (ByteBuf) msg;
 
-                            pipeline.addLast(new ChannelInboundHandlerAdapter() {
-                                @Override
-                                public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                    MessagePack<CommandAuthorization> command = (MessagePack<CommandAuthorization>) msg;
-                                    System.out.println("Command byte " + command.getCommandByte());
-                                    String [] strings = ((String) command.getDataObject()).split("");
-                                    System.out.println("Command login and pass" + Arrays.toString(strings));
+                                    byte[] bytes = byteBuf.array();
+                                    System.out.println(bytes.length);
+                                    try {
+                                        for (int i = 0; i < bytes.length; i++) {
+                                            outputStream.write(bytes[i]);
+                                        }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    } finally {
+                                        try {
+                                            outputStream.close();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
 
-
-                                }
-
-                                @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    cause.printStackTrace();
-                                    ctx.channel().close();
-                                }
-                            });
-
-
-                            pipeline.addLast(new ChannelInboundHandlerAdapter() {
-                                @Override
-                                public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                    System.out.println("hand3");
-                                    FileInformation fileInformation = (FileInformation) msg;
-                                    System.out.println(fileInformation);
-                                    ctx.writeAndFlush(fileInformation);
-
-                                }
-
-                                @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    cause.printStackTrace();
-                                    ctx.channel().close();
+                                    ctx.writeAndFlush("file write bytes " + byteBuf.array().length);
                                 }
                             });
+                            pipeline.addLast("FileWrite", new ChunkedWriteHandler());
                         }
                     })
                     .bind("localhost", 1234)
@@ -98,3 +84,11 @@ public class NettyObjectMessageServer {
         }
     }
 }
+
+
+//new ChannelInboundHandlerAdapter() {
+//
+//
+
+//
+//    }

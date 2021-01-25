@@ -11,7 +11,13 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.stream.ChunkedNioStream;
+import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Path;
 
 public class NettyClientObject {
 
@@ -27,21 +33,24 @@ public class NettyClientObject {
                                 ChannelPipeline pipeline = socketChannel.pipeline();
                                 pipeline.addLast(new ObjectEncoder());
                                 pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-                                pipeline.addLast(new ChannelInboundHandlerAdapter() {
+                                pipeline.addLast("ClientHandler",new ChannelInboundHandlerAdapter() {
+
+
+                                    private final File file = new File("LogFile.log");
+
                                     @Override
                                     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                                        ctx.writeAndFlush(
-                                                new MessagePack<>(CommandAuthorization.AUTUSER, "user pass")
-                                        );
+                                        super.channelActive(ctx);
+                                        System.out.printf("start");
+                                        ctx.writeAndFlush(new ChunkedStream(new FileInputStream(file)));
                                     }
 
                                     @Override
                                     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                        FileInformation information = (FileInformation) msg;
-                                        System.out.println(information.toString());
+                                        System.out.println((String)msg);
                                     }
                                 });
-                                pipeline.addLast(new ChunkedWriteHandler());
+                                pipeline.addLast("FileWrite",new ChunkedWriteHandler());
                             }
                         })
                         .connect("localhost", 1234)
