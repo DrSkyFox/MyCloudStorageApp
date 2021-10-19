@@ -1,75 +1,56 @@
 package server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import server.interfaces.ClientHandlerService;
-import server.interfaces.CloudStorageService;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import server.interfaces.ServerInterface;
 import server.interfaces.LoggerHandlerService;
 import server.interfaces.SettingServer;
-import server.objects.ClientList;
-import server.objects.LoggerHandler;
-import server.objects.ServerCloudHandler;
+import server.objects.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
-public class CloudDriveServer implements CloudStorageService {
+public class CloudDriveServer implements ServerInterface {
 
     private LoggerHandlerService logHandler;
-
-    private Integer port = 9090;
-    private String nameService = "Cloud Storage";
-    private String rootRepositoryDirectory = "defaultRepo";
-
+    private Logger serverLog;
     private SettingServer settingServer;
-    private ClientList clientList;
+
     private ChannelFuture channelFuture;
-    private CloudStorageService storageService;
+    private ServerInterface storageService;
+    private String nameServer;
 
-    public CloudDriveServer() {
-        logHandler = new LoggerHandler();
-    }
+    private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    public CloudDriveServer(Integer port) {
-        this.port = port;
-    }
-    public CloudDriveServer(SettingServer settingServer) {
-        this.settingServer = settingServer;
-    }
 
-    public CloudDriveServer(LoggerHandlerService logHandler) {
-        this.logHandler = logHandler;
-    }
+
 
     public CloudDriveServer(SettingServer settingServer, LoggerHandlerService logHandler) {
         this.logHandler = logHandler;
         this.settingServer = settingServer;
-    }
-
-    public CloudDriveServer(LoggerHandlerService logHandler, Integer port) {
-        this.logHandler = logHandler;
-        this.port = port;
-    }
-
-    public CloudDriveServer(LoggerHandlerService logHandler, Integer port, String nameService) {
-        this.logHandler = logHandler;
-        this.port = port;
-        this.nameService = nameService;
+        storageService = this;
+        serverLog = logHandler.getLoggerServ();
     }
 
     private void checkRootRepository() {
-        if(Files.notExists(Path.of(rootRepositoryDirectory))) {
+        if(Files.notExists(Path.of(settingServer.getRootDirectory()))) {
             try {
-                Files.createDirectories(Path.of(rootRepositoryDirectory));
+                Files.createDirectories(Path.of(settingServer.getRootDirectory()));
             } catch (IOException e) {
-
+                serverLog.info(String.format("Cant create root directories for cloud server: %s", e.getMessage()));
+                serverLog.warning(Arrays.toString(e.getStackTrace()));
             }
         }
     }
@@ -80,21 +61,12 @@ public class CloudDriveServer implements CloudStorageService {
     }
 
     public void start() {
-        if(settingServer !=null) {
-            port = settingServer.getPort();
-            nameService  = settingServer.getNameService();
-            rootRepositoryDirectory = settingServer.getRootDirectory();
-        }
-
+        nameServer =settingServer.getNameService();
+        checkRootRepository();
         try {
             logHandler.getLoggerServ().info("Start Server with Param:");
-            if(settingServer != null) {
-                logHandler.getLoggerServ().info(settingServer.toString());
-            } else {
-                logHandler.getLoggerServ().info(toString());
-            }
+            logHandler.getLoggerServ().info(settingServer.toString());
             storageService = CloudDriveServer.this;
-            clientList = new ClientList(storageService,logHandler);
             run();
 
         } catch (Exception e) {
@@ -116,11 +88,15 @@ public class CloudDriveServer implements CloudStorageService {
                         @Override
                         public void initChannel(SocketChannel ch)
                                 throws Exception {
-                            ch.pipeline().addLast(new ServerCloudHandler(storageService, settingServer, logHandler));
+                            ch.pipeline().addLast(new ObjectEncoder());
+                            ch.pipeline().addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+                            ch.pipeline().addLast(new ChannelClientHandler(storageService));
+                            ch.pipeline().addLast(new AuthHandler(storageService));
                         }
                     }).option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
-            channelFuture = b.bind(port).sync();
+
+            channelFuture = b.bind(settingServer.getPort()).sync();
             channelFuture.channel().closeFuture().sync();
         }
         catch (InterruptedException e) {
@@ -129,7 +105,7 @@ public class CloudDriveServer implements CloudStorageService {
         finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
-            closeChannel();
+            channelGroup.close();
             logHandler.getLoggerServ().info("Server shutdown");
         }
     }
@@ -157,41 +133,15 @@ public class CloudDriveServer implements CloudStorageService {
     }
 
     @Override
+    public ChannelGroup getChannelGroup() {
+        return channelGroup;
+    }
+
+    @Override
     public LoggerHandlerService getLogger() {
         return logHandler;
     }
 
-    @Override
-    public ClientHandlerService addClient(ChannelHandlerContext context, ByteBuf byteBuf) {
-        return clientList.addClient(context, byteBuf);
-    }
 
-    @Override
-    public void deleteClient(ChannelHandlerContext context, ClientHandlerService clientHandlerService) {
-        clientList.deleteClient(context, clientHandlerService);
-    }
 
-    @Override
-    public HashSet<ClientHandlerService> getClients() {
-        return clientList.getListClients();
-    }
-
-    @Override
-    public boolean isOnline(ClientHandlerService clientHandlerService) {
-        return clientList.isOnline(clientHandlerService);
-    }
-
-    @Override
-    public void closeChannel() {
-        clientList.closeAllClients();
-        channelFuture.channel().close();
-    }
-
-    @Override
-    public String toString() {
-        return "CloudDriveServer{" +
-                "port=" + port +
-                ", nameService='" + nameService + '\'' +
-                '}';
-    }
 }

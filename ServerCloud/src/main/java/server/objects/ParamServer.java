@@ -2,15 +2,51 @@ package server.objects;
 
 import server.interfaces.SettingServer;
 
+import java.io.IOException;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
 public class  ParamServer implements SettingServer {
     private int port;
     private String nameService;
     private int bufferMax = 8192;
     private int bufferMin = 1024;
     private String rootDirectory;
-    private String fileLogs;
-    private String fileLogsAuth;
 
+    private int maxCountLogFile = 5;
+    private int maxSizeLogFile = 1024 * 1024 * 30;
+
+    private FileHandler fileLogServer;
+    private FileHandler fileLogAuthorization;
+    private FileHandler fileLogFileTransfer;
+    private ConsoleHandler conLogServer;
+    private ConsoleHandler conLogAuthorization;
+    private ConsoleHandler conLogFileTransfer;
+
+    public ParamServer() throws IOException {
+        init();
+    }
+
+    private void init() throws IOException {
+        SimpleFormatter formatter = new SimpleFormatter();
+        this.fileLogServer = new FileHandler("ServerLog.%u.%g.log", maxSizeLogFile, maxCountLogFile,true);
+        this.fileLogFileTransfer = new FileHandler("FileOperationLog.%u.%g.log", maxSizeLogFile, maxCountLogFile, true);
+        this.fileLogAuthorization = new FileHandler("AuthLog.%u.%g.log", maxSizeLogFile, maxCountLogFile, true);
+
+        conLogServer = new ConsoleHandler();
+        conLogAuthorization = new ConsoleHandler();
+        conLogFileTransfer = new ConsoleHandler();
+
+
+        fileLogServer.setFormatter(formatter);
+        fileLogAuthorization.setFormatter(formatter);
+        fileLogFileTransfer.setFormatter(formatter);
+
+        conLogFileTransfer.setFormatter(formatter);
+        conLogAuthorization.setFormatter(formatter);
+        conLogServer.setFormatter(formatter);
+    }
 
     @Override
     public int getPort() {
@@ -64,35 +100,66 @@ public class  ParamServer implements SettingServer {
     }
 
     @Override
-    public void setLoggerFile(String fileNameLogs) {
-        this.fileLogs = fileNameLogs;
+    public FileHandler getLoggerFileHandlerForServerInformation() {
+        return fileLogServer;
     }
 
     @Override
-    public String getLoggerFile() {
-        return fileLogs;
+    public FileHandler getLoggerFileHandlerForAuthorizationInformation() {
+        return fileLogAuthorization;
+    }
+
+    @Override
+    public FileHandler getLoggerFileHandlerForFileTransferInformation() {
+        return fileLogFileTransfer;
+    }
+
+    @Override
+    public ConsoleHandler getLoggerConsoleHandlerForServerInformation() {
+        return conLogServer;
+    }
+
+    @Override
+    public ConsoleHandler getLoggerConsoleHandlerForAuthorizationInformation() {
+        return conLogAuthorization;
+    }
+
+    @Override
+    public ConsoleHandler getLoggerConsoleHandlerForFileTransferInformation() {
+        return conLogFileTransfer;
     }
 
 
     @Override
-    public void setLogAuthFile(String fileNameLogsAuth) {
-        this.fileLogsAuth = fileNameLogsAuth;
+    public void setLogFileForServer(String str) {
+        try {
+            fileLogServer = new FileHandler(patterForLogFile(str), maxSizeLogFile, maxCountLogFile, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public String getLogAuthFile() {
-        return fileLogsAuth;
+    public void setLogFileForAuthorization(String str) {
+        try {
+            fileLogAuthorization = new FileHandler(patterForLogFile(str), maxSizeLogFile, maxCountLogFile, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public String toString() {
-        return "ParamServer{" +
-                "port=" + port +
-                ", nameService='" + nameService + '\'' +
-                ", bufferMax=" + bufferMax +
-                ", bufferMin=" + bufferMin +
-                ", rootDirectory='" + rootDirectory + '\'' +
-                ", fileLogs='" + fileLogs + '\'' +
-                '}';
+    public void setLogFileForFileTransfer(String str) {
+        try {
+            fileLogFileTransfer = new FileHandler(patterForLogFile(str), maxSizeLogFile, maxCountLogFile, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+    private String patterForLogFile(String fileName) {
+        return fileName + ".%u.%g.log";
+    }
+
+
 }

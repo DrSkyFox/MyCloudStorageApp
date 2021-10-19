@@ -1,5 +1,8 @@
 package server.interfaces;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+
 public interface SettingServer {
 
      int getPort() ;
@@ -7,6 +10,7 @@ public interface SettingServer {
 
      String getNameService();
      void setNameService(String nameService);
+
 
      int getBufferMax();
      int getBufferMin();
@@ -16,11 +20,21 @@ public interface SettingServer {
      String getRootDirectory();
      void setRootDirectory(String str);
 
-     void setLoggerFile(String fileNameLogs);
-     String getLoggerFile();
 
-     void setLogAuthFile(String fileNameLogsAuth);
-     String getLogAuthFile();
 
+     // Settings logger section --------------------------------------------------------------
+     void setLogFileForServer(String str);
+     void setLogFileForAuthorization(String str);
+     void setLogFileForFileTransfer(String str);
+
+
+     FileHandler getLoggerFileHandlerForServerInformation();
+     FileHandler getLoggerFileHandlerForAuthorizationInformation();
+     FileHandler getLoggerFileHandlerForFileTransferInformation();
+
+     ConsoleHandler getLoggerConsoleHandlerForServerInformation();
+     ConsoleHandler getLoggerConsoleHandlerForAuthorizationInformation();
+     ConsoleHandler getLoggerConsoleHandlerForFileTransferInformation();
+     // End Settings logger section --------------------------------------------------------------
 }
 

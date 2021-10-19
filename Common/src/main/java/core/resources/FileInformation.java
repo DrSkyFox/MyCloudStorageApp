@@ -1,18 +1,18 @@
 package core.resources;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileInformation {
+public class FileInformation implements Serializable {
     private String name;
     private String length;
     private String date;
-    private Path path;
+
 
 
     public FileInformation(Path path) {
-        this.path = path;
         this.name = path.getFileName().toString();
         try {
             this.length = getStringLength(Files.size(path));
@@ -22,7 +22,9 @@ public class FileInformation {
         }
     }
 
-
+    public FileInformation(String name) {
+        this.name = name;
+    }
 
     private String getStringLength(long length) {
         if (length < 1024) return length + "b";
@@ -55,13 +57,6 @@ public class FileInformation {
         this.date = date;
     }
 
-    public Path getPath() {
-        return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
-    }
 
     @Override
     public String toString() {
@@ -69,7 +64,6 @@ public class FileInformation {
                 "name='" + name + '\'' +
                 ", length='" + length + '\'' +
                 ", date='" + date + '\'' +
-                ", path=" + path +
                 '}';
     }
 }

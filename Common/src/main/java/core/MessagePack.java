@@ -1,30 +1,33 @@
 package core;
 
-import core.common.MessageInterface;
-import io.netty.buffer.ByteBuf;
+import core.interfaces.CommandInterface;
+import core.interfaces.MessageInterface;
 
-public class MessagePack implements MessageInterface {
-    private byte command;
-    private byte[] data;
+import java.io.Serializable;
 
-    public MessagePack(ByteBuf byteBuf) {
-        load(byteBuf);
-    }
+public class MessagePack<T extends CommandInterface> implements Serializable, MessageInterface<T> {
+    private CommandInterface<T> commandInterface;
+    private Object data;
 
-
-    private void load(ByteBuf byteBuf) {
-        command = byteBuf.readByte();
-        data = new byte[DefaultSettings.LEN_COMM];
-        byteBuf.readBytes(data);
+    public MessagePack(CommandInterface command, Object data) {
+        this.commandInterface = command;
+        this.data = data;
     }
 
     @Override
-    public byte getCommand() {
-        return command;
+    public byte getCommandByte() {
+        return commandInterface.getSignalByte();
     }
 
     @Override
-    public byte[] getCommandData() {
+    public Object getDataObject() {
         return data;
     }
+
+    @Override
+    public T getCommand() {
+        return commandInterface.getCommand();
+    }
 }
+
+

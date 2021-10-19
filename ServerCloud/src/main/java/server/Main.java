@@ -5,29 +5,34 @@ import server.interfaces.SettingServer;
 import server.objects.LoggerHandler;
 import server.objects.ParamServer;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+
+    public static void main(String[] args)  {
 
         LoggerHandlerService loggerServer = new LoggerHandler();
-        CloudDriveServer cloudDriveServer = new CloudDriveServer(loggerServer);
+        SettingServer settingServer = startParam(args);
+        CloudDriveServer cloudDriveServer = new CloudDriveServer(settingServer, loggerServer);
+        cloudDriveServer.setSettingServer(settingServer);
 
-        if(args != null) {
-            SettingServer settingServer = startParam(args, loggerServer);
-            cloudDriveServer.setSettingServer(settingServer);
-        }
 
         cloudDriveServer.start();
 
 
     }
 
-    private static SettingServer startParam(String[] args, LoggerHandlerService loggerHand) {
+    private static SettingServer startParam(String[] args) {
 
         Iterator<String> paramStart = Arrays.stream(args).iterator();
-        SettingServer settingServer = new ParamServer();
+        SettingServer settingServer = null;
+        try {
+            settingServer = new ParamServer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         while (paramStart.hasNext()) {
 
@@ -43,11 +48,14 @@ public class Main {
             if (paramStart.equals("-buffMax")) {
                 settingServer.setBufferMax(Integer.valueOf(paramStart.next()));
             }
-            if(paramStart.equals("-logFile")) {
-                settingServer.setLoggerFile(paramStart.next());
+            if(paramStart.equals("-logFileServer")) {
+                settingServer.setLogFileForServer(paramStart.next());
             }
             if(paramStart.equals("-logAuthFile")) {
-                settingServer.setLogAuthFile(paramStart.next());
+                settingServer.setLogFileForAuthorization(paramStart.next());
+            }
+            if(paramStart.equals("-logFileOperation")) {
+                settingServer.setLogFileForFileTransfer(paramStart.next());
             }
 
         }
